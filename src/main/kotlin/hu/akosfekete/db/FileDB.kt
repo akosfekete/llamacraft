@@ -7,7 +7,7 @@ import org.mapdb.DB
 import org.mapdb.DBMaker.fileDB
 import org.mapdb.Serializer
 
-private val defValues = listOf("Earth", "Fire", "Wind", "Water")
+val defValues = listOf("Earth", "Fire", "Wind", "Water")
 
 @ApplicationScoped
 class FileDB {

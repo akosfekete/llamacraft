@@ -11,10 +11,10 @@ interface CombineAgent {
 			Combine the following two INPUT words into a RESULT. The INPUT words are separated by a "+" sign.
             The words should not be simply concatenated. Instead, you should output a result phrase based on the INPUT words' meaning.
             When the INPUT words are simple, the RESULT should be logical (e.g. for "cold" and "water" the RESULT is "Ice")
-            Otherwise, the RESULT should be funny and politically incorrect. (e.g. for "America" and "Satan" the result is "Trump")
-            Include as many pop-culture references as possible.
-            The RESULT should only consist of nouns and adjectives.
-            The RESULT can include famous people, places, etc.
+            The RESULT should be a pop-culture reference whenever possible.
+            The RESULT should be funny and politically incorrect. (e.g. for "America" and "Satan" the result is "Trump")
+            The RESULT should make as much sense as possible, it should be clever.
+            The RESULT should often include famous people, places, etc.
             The RESULT should be short, three words maximum.
             The RESULT should include one or more emojis at the end.
             The INPUT must not be returned, only the RESULT.
