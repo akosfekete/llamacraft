@@ -2,15 +2,10 @@ package hu.akosfekete.combine
 
 import hu.akosfekete.db.FileDB
 import hu.akosfekete.db.defValues
-import hu.akosfekete.neo4j.Graph
 import hu.akosfekete.neo4j.Neo4jDb
 import jakarta.enterprise.inject.Default
 import jakarta.inject.Inject
-import jakarta.ws.rs.DELETE
-import jakarta.ws.rs.GET
-import jakarta.ws.rs.Path
-import jakarta.ws.rs.Produces
-import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.*
 import jakarta.ws.rs.core.Response
 
 
@@ -18,6 +13,9 @@ import jakarta.ws.rs.core.Response
 class ReviewResource {
     @Inject
     lateinit var triage: CombineAgent
+
+    @Inject
+    lateinit var emojiAgent: EmojiAgent
 
     @Inject
     @field: Default
@@ -34,9 +32,11 @@ class ReviewResource {
         val graphResult = graphDb.getCombinationResult(first, second)
         if (graphResult == null) {
             val combined = triage.combineWords("$first|$second")
+            val emoji = emojiAgent.getEmojiFor(combined)
 //            fileDB.saveCombinationResult(first, second, combined)
-            graphDb.saveCombinationResult(first, second, combined)
-            return combined
+            val withEmoji = "$combined $emoji"
+            graphDb.saveCombinationResult(first, second, withEmoji)
+            return withEmoji
         }
         return graphResult
     }

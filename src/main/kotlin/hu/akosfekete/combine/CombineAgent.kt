@@ -16,15 +16,14 @@ interface CombineAgent {
             The RESULT should make as much sense as possible, it should be clever.
             The RESULT should often include famous people, places, etc.
             The RESULT should be short, three words maximum.
-            The RESULT should include one or more emojis at the end.
             The INPUT must not be returned, only the RESULT.
 
             ---
             
             Examples
-            INPUT: cat+dog, RESULT: Animal 🐕
-            INPUT: animal+human RESULT: Monkey 🐵
-            INPUT: galaxy+earth RESULT: Milky Way 🌌
+            INPUT: cat+dog, RESULT: Animal
+            INPUT: animal+human RESULT: Monkey
+            INPUT: galaxy+earth RESULT: Milky Way
             
 			You MUST NOT return any text other than the result of the word combination. Only the RESULT of the word equation must be returned with no additional text.
 			""")
