@@ -1,6 +1,6 @@
 import update from "immutability-helper";
 import type { FC } from "react";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { useDrop } from "react-dnd";
 import { v4 as uuidv4 } from "uuid";
 
@@ -9,20 +9,31 @@ import type { DragItem } from "./interfaces";
 import { ItemTypes } from "./ItemTypes.js";
 
 export interface ContainerProps {
+  boxes: BoxMap;
+  setBoxes: (setter: (boxes: BoxMap) => BoxMap) => void;
   snapToGrid: boolean;
+  // When a result arrived from the server: notify the parent to update things
   itemAdded: (name: string) => void;
   graphOpenedForItem: (name: string) => void;
 }
 
-interface BoxMap {
-  [key: string]: { top: number; left: number; title: string; value: string };
+export interface BoxData {
+  top: number;
+  left: number;
+  title: string;
+  value: string;
+}
+
+export interface BoxMap {
+  [key: string]: BoxData;
 }
 
 export const Container: FC<ContainerProps> = ({
   itemAdded,
+  boxes,
+  setBoxes,
   graphOpenedForItem,
 }) => {
-  const [boxes, setBoxes] = useState<BoxMap>({});
 
   const moveBox = useCallback(
     (id: string, left: number, top: number, title: string, value: string) => {
@@ -32,19 +43,16 @@ export const Container: FC<ContainerProps> = ({
             [id]: {
               $merge: { left, top },
             },
-          })
+          }),
         );
       } else {
-        // const newBox = {left, top, title: "test"};
-        // const newBoxes = {...boxes, id: newBox};
         setBoxes((boxes) =>
-          update(boxes, { [id]: { $set: { left, top, title, value } } })
+          update(boxes, { [id]: { $set: { left, top, title, value } } }),
         );
-        // setBoxes(newBoxes);
       }
       console.log(boxes);
     },
-    [boxes]
+    [boxes],
   );
 
   const [, drop] = useDrop(
@@ -67,20 +75,16 @@ export const Container: FC<ContainerProps> = ({
           moveBox(uuidv4(), left, top, item.title, item.value);
           return;
         }
-        // if (snapToGrid) {
-        //   [left, top] = doSnapToGrid(left, top);
-        // }
-
         moveBox(item.id, left, top, item.title, item.value);
         return undefined;
       },
     }),
-    [moveBox]
+    [moveBox],
   );
 
   const otherItemDropped = (
     firstItem: ItemDropData,
-    secondItem: ItemDropData
+    secondItem: ItemDropData,
   ) => {
     {
       if (firstItem.id === secondItem.id) {
@@ -91,7 +95,7 @@ export const Container: FC<ContainerProps> = ({
         const secondTitle = boxes[secondItem.id]?.title ?? secondItem.title;
 
         fetch(
-          `http://localhost:8080/review/combine?first=${firstTitle}&second=${secondTitle}`
+          `http://localhost:8080/review/combine?first=${firstTitle}&second=${secondTitle}`,
         )
           .then((res) => res.text())
           .then((res) => {
@@ -101,7 +105,7 @@ export const Container: FC<ContainerProps> = ({
                 [firstItem.id]: {
                   $merge: { title: res },
                 },
-              })
+              }),
             );
           });
 
@@ -128,6 +132,9 @@ export const Container: FC<ContainerProps> = ({
           {...(boxes[key] as { top: number; left: number; title: string })}
         />
       ))}
+      <button onClick={() => setBoxes(() => ({}))} className="small-button m-3">
+        Clear
+      </button>
     </div>
   );
 };

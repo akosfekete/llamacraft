@@ -17,12 +17,13 @@ export interface BoxProps {
   droppedItem?: (_id: string, _title: string) => void;
   graphOpenedForItem?: (title: string) => void;
   removed?: (_id: string) => void;
+  onBoxDoubleClicked?: (_id: string, _title: string) => void;
   yellow?: boolean;
   preview?: boolean;
 }
 
 function getBtnClassName(isOver: boolean) {
-  return `outline-none focus:outline-none hover:cursor-default mr-4 rounded-lg py-3 px-6 font-sans 
+  return `outline-none focus:outline-none hover:cursor-default rounded-lg py-3 px-6 font-sans 
           text-xs font-bold uppercase text-white shadow-md shadow-blue-500/20
            transition-all hover:shadow-lg hover:shadow-red-500/40 
             ${isOver ? "bg-zinc-100" : "bg-zinc-700"}`;
@@ -35,6 +36,7 @@ export const Box: FC<BoxProps> = memo(function Box({
   fromOutside,
   droppedItem,
   removed,
+  onBoxDoubleClicked: onBoxDoubleClicked,
   graphOpenedForItem,
 }) {
   const [{ isOver }, drop] = useDrop(() => ({
@@ -57,6 +59,7 @@ export const Box: FC<BoxProps> = memo(function Box({
       role={preview ? "BoxPreview" : "Box"}
       className={getBtnClassName(isOver)}
       data-ripple-light="true"
+      onDoubleClick={() => onBoxDoubleClicked?.(id, title)}
     >
       <Popover open={open} onOpenChange={setOpen}>
         {fromOutside ? (
