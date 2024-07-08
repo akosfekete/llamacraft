@@ -34,7 +34,7 @@ class ReviewResource {
             val combined = triage.combineWords("$first|$second")
             val emoji = emojiAgent.getEmojiFor(combined)
 //            fileDB.saveCombinationResult(first, second, combined)
-            val withEmoji = "$combined $emoji"
+            val withEmoji = "$combined $emoji".replace("\"", "")
             graphDb.saveCombinationResult(first, second, withEmoji)
             return withEmoji
         }

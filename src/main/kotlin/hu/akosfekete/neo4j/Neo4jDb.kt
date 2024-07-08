@@ -1,8 +1,5 @@
 package hu.akosfekete.neo4j
-
-import jakarta.annotation.PostConstruct
-import jakarta.annotation.PreDestroy
-import jakarta.enterprise.context.ApplicationScoped
+import jakarta.annotation.PostConstruct import jakarta.annotation.PreDestroy import jakarta.enterprise.context.ApplicationScoped
 import org.neo4j.configuration.GraphDatabaseSettings.DEFAULT_DATABASE_NAME
 import org.neo4j.dbms.api.DatabaseManagementService
 import org.neo4j.dbms.api.DatabaseManagementServiceBuilder
@@ -59,7 +56,7 @@ class Neo4jDb {
 
     private fun createNode(title: String, tx: Transaction): Node {
         val createNode = tx.createNode()
-        createNode.setProperty("title", title)
+        createNode.setProperty("title", title.replace("\"", ""))
         return createNode
     }
 
