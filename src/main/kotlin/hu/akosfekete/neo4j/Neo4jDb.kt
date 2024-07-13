@@ -13,6 +13,7 @@ import org.neo4j.graphdb.Node
 import org.neo4j.graphdb.Transaction
 import org.neo4j.kernel.impl.core.NodeEntity
 import java.nio.file.Path
+import java.time.Instant
 import kotlin.io.path.exists
 
 const val PROP_OTHER_NODE = "firstNodeProperty"
@@ -77,6 +78,7 @@ class Neo4jDb {
         val createNode = tx.createNode()
         createNode.setProperty("title", title)
         createNode.setProperty("emoji", emoji)
+        createNode.setProperty("creationTime", Instant.now().toEpochMilli())
         return createNode
     }
 
@@ -96,7 +98,7 @@ class Neo4jDb {
 
     fun getAllResults(): Collection<String> {
         graphDb.beginTx().use { tx ->
-            val res = tx.execute("MATCH (n) RETURN n")
+            val res = tx.execute("MATCH (n) RETURN n ORDER BY n.creationTime")
             return res.stream().map { it["n"] as Node }.map { "${it.getProperty("title")} ${it.getProperty("emoji")}" }.toList()
         }
     }
