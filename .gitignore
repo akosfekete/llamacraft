@@ -44,3 +44,5 @@ nb-configuration.xml
 
 # node.js
 node_modules/
+/neo4j_test/
+/test.db

@@ -38,6 +38,11 @@
       <artifactId>quarkus-langchain4j-openai</artifactId>
       <version>0.12.0</version>
     </dependency>
+<!--    <dependency>-->
+<!--      <groupId>io.quarkiverse.langchain4j</groupId>-->
+<!--      <artifactId>quarkus-langchain4j-ollama</artifactId>-->
+<!--      <version>0.14.2</version>-->
+<!--    </dependency>-->
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-kotlin</artifactId>

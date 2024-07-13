@@ -36,7 +36,6 @@ export const Container: FC<ContainerProps> = ({
   setBoxes,
   graphOpenedForItem,
 }) => {
-
   const moveBox = useCallback(
     (id: string, left: number, top: number, title: string, value: string) => {
       if (boxes[id]) {
@@ -64,9 +63,9 @@ export const Container: FC<ContainerProps> = ({
         const delta = !item.fromOutside
           ? monitor.getDifferenceFromInitialOffset()
           : (monitor.getClientOffset() as {
-              x: number;
-              y: number;
-            });
+            x: number;
+            y: number;
+          });
 
         if (!delta) {
           return;

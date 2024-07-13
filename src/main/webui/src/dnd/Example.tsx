@@ -29,7 +29,6 @@ export const Example: FC = () => {
       return {
         ...boxMap,
         [data.id]: {
-          // TODO: calculate random position
           top: getRandomNumberBetween(400, 600),
           left: getRandomNumberBetween(500, 700),
           title: data.title,

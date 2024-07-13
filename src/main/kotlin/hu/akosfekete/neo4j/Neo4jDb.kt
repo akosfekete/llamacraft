@@ -1,5 +1,9 @@
 package hu.akosfekete.neo4j
-import jakarta.annotation.PostConstruct import jakarta.annotation.PreDestroy import jakarta.enterprise.context.ApplicationScoped
+
+import jakarta.annotation.PostConstruct
+import jakarta.annotation.PreDestroy
+import jakarta.enterprise.context.ApplicationScoped
+import org.eclipse.microprofile.config.inject.ConfigProperty
 import org.neo4j.configuration.GraphDatabaseSettings.DEFAULT_DATABASE_NAME
 import org.neo4j.dbms.api.DatabaseManagementService
 import org.neo4j.dbms.api.DatabaseManagementServiceBuilder
@@ -11,52 +15,68 @@ import org.neo4j.kernel.impl.core.NodeEntity
 import java.nio.file.Path
 import kotlin.io.path.exists
 
-private const val TEST_DB_NAME = "test_db_name"
-
 const val PROP_OTHER_NODE = "firstNodeProperty"
+val defValues = listOf("Earth", "Fire", "Wind", "Water")
 
 @ApplicationScoped
 class Neo4jDb {
     private lateinit var managementService: DatabaseManagementService
     private lateinit var graphDb: GraphDatabaseService
 
+    @ConfigProperty(name = "neo4j.path", defaultValue = "neo4j_test")
+    lateinit var neo4jPath: String
+
     @PostConstruct
     fun initDb() {
-        val of = Path.of("neo4j_test")
+        val of = Path.of(neo4jPath)
+        require(of.exists()) { "DB path incorrect: $neo4jPath" }
         managementService = DatabaseManagementServiceBuilder(of).build()
-        if (!of.exists()) {
-            managementService.createDatabase(TEST_DB_NAME)
-        }
         graphDb = managementService.database(DEFAULT_DATABASE_NAME)
+        initDbWithDefValues()
+    }
+
+    fun initDbWithDefValues() {
+        graphDb.beginTx().use { tx ->
+            defValues.forEach {
+                createOrFindNode(it, "", tx)
+            }
+            tx.commit()
+        }
     }
 
     @PreDestroy
     fun shutdownDb() = managementService.shutdown()
 
-    fun saveCombinationResult(first: String, second: String, resultString: String?) {
+    fun saveCombinationResult(first: String, second: String, resultString: String?, emoji: String): String? {
         if (resultString == null) {
-            return;
+            return null
         }
         graphDb.beginTx().use {
             val i = first.compareTo(second)
             val firstNode = createOrFindNode(if (i < 0) first else second, it)
             val secondNode = createOrFindNode(if (i < 0) second else first, it)
-            val resultNode = createOrFindNode(resultString, it)
+            val resultNode = createOrFindNode(resultString, emoji, it)
 
             val fromFirstNode = firstNode.createRelationshipTo(resultNode, COMBINATION_RESULT)
             val fromSecondNode = secondNode.createRelationshipTo(resultNode, COMBINATION_RESULT)
             fromSecondNode.setProperty(PROP_OTHER_NODE, firstNode.getProperty("title"))
             fromFirstNode.setProperty(PROP_OTHER_NODE, secondNode.getProperty("title"))
 
+            val result = "${resultNode.getProperty("title")} ${resultNode.getProperty("emoji")}"
             it.commit()
+            return result
         }
     }
 
-    private fun createOrFindNode(title: String, tx: Transaction) = findNode(title, tx) ?: createNode(title, tx)
+    private fun createOrFindNode(title: String, emoji: String, tx: Transaction) = findNode(title, tx) ?: createNode(title, emoji, tx)
 
-    private fun createNode(title: String, tx: Transaction): Node {
+    // TODO: handle this better, no need to create nodes when finding preexisting nodes
+    private fun createOrFindNode(title: String, tx: Transaction) = findNode(title, tx) ?: createNode(title, "", tx)
+
+    private fun createNode(title: String, emoji: String, tx: Transaction): Node {
         val createNode = tx.createNode()
-        createNode.setProperty("title", title.replace("\"", ""))
+        createNode.setProperty("title", title)
+        createNode.setProperty("emoji", emoji)
         return createNode
     }
 
@@ -66,15 +86,18 @@ class Neo4jDb {
             val firstNode = findNode(if (i < 0) first else second, tx)
             val secondNode = findNode(if (i < 0) second else first, tx)
             val found = secondNode?.getRelationships(COMBINATION_RESULT)
-                    ?.firstOrNull { it.getProperty(PROP_OTHER_NODE) == firstNode?.getProperty("title") }
-            return found?.endNode?.getProperty("title") as String?
+                ?.firstOrNull { it.getProperty(PROP_OTHER_NODE) == firstNode?.getProperty("title") }
+            if (found == null) {
+                return null
+            }
+            return "${found.endNode?.getProperty("title")} ${found.endNode?.getProperty("emoji")}"
         }
     }
 
     fun getAllResults(): Collection<String> {
         graphDb.beginTx().use { tx ->
             val res = tx.execute("MATCH (n) RETURN n")
-            return res.stream().map { it["n"] as Node }.map { it.getProperty("title") as String }.toList()
+            return res.stream().map { it["n"] as Node }.map { "${it.getProperty("title")} ${it.getProperty("emoji")}" }.toList()
         }
     }
 
@@ -82,8 +105,8 @@ class Neo4jDb {
         graphDb.beginTx().use { tx ->
             val startNode = findNode(startNodeTitle, tx) ?: return Graph.empty()
             val traversalDesc = tx.traversalDescription()
-                    .breadthFirst()
-                    .relationships(COMBINATION_RESULT, Direction.INCOMING)
+                .breadthFirst()
+                .relationships(COMBINATION_RESULT, Direction.INCOMING)
             val traverser = traversalDesc.traverse(startNode)
             val nodes = traverser.nodes().map { GraphNode(it.getProperty("title") as String, it.getProperty("title") as String) }.toSet()
             val edges = traverser.relationships().map { GraphEdge.fromRelationship(it) }.toSet()
@@ -100,11 +123,18 @@ class Neo4jDb {
         return next["n"] as NodeEntity
     }
 
+    fun getEmojiForNode(title: String): String? {
+        graphDb.beginTx().use { tx ->
+            return findNode(title, tx)?.getProperty("emoji") as String?
+        }
+    }
+
     fun clear() {
-        graphDb.beginTx().use  { tx ->
+        graphDb.beginTx().use { tx ->
             tx.execute("MATCH (n) DETACH DELETE n")
             tx.commit()
-         }
+        }
+        initDbWithDefValues()
     }
 
 }

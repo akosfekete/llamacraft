@@ -1,13 +1,14 @@
 package hu.akosfekete.combine
 
 import hu.akosfekete.db.FileDB
-import hu.akosfekete.db.defValues
 import hu.akosfekete.neo4j.Neo4jDb
 import jakarta.enterprise.inject.Default
 import jakarta.inject.Inject
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.Response
 
+val matchNonAlphaNumeric = Regex("[^a-zA-Z0-9 ]")
+val matchAlphaNumeric = Regex("[a-zA-Z0-9 ]")
 
 @Path("/review")
 class ReviewResource {
@@ -28,15 +29,11 @@ class ReviewResource {
     @GET
     @Path("/combine/")
     fun combineWords(@QueryParam("first") first: String, @QueryParam("second") second: String): String {
-//        val combinationResult = fileDB.getCombinationResult(first, second)
         val graphResult = graphDb.getCombinationResult(first, second)
         if (graphResult == null) {
-            val combined = triage.combineWords("$first|$second")
-            val emoji = emojiAgent.getEmojiFor(combined)
-//            fileDB.saveCombinationResult(first, second, combined)
-            val withEmoji = "$combined $emoji".replace("\"", "")
-            graphDb.saveCombinationResult(first, second, withEmoji)
-            return withEmoji
+            val combined = triage.combineWords("$first|$second").replace(matchNonAlphaNumeric, "").trimEnd()
+            val emoji = graphDb.getEmojiForNode(combined) ?: emojiAgent.getEmojiFor(combined).replace("\"", "").replace(matchAlphaNumeric, "").trimEnd()
+            return graphDb.saveCombinationResult(first, second, combined, emoji) ?: "ERROR"
         }
         return graphResult
     }
@@ -52,14 +49,12 @@ class ReviewResource {
     @Path("/allCombinations")
     fun deleteCombinations() {
         graphDb.clear()
-//        fileDB.clearCombinations()
     }
 
     @GET
     @Path("/allCombinations")
     fun getAllCombinations(): Collection<String?> {
-//        return fileDB.getAllResults()
-        return (defValues + graphDb.getAllResults()).distinct()
+        return graphDb.getAllResults()
     }
 
     @GET
