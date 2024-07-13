@@ -13,7 +13,7 @@ export interface GraphData {
   edges: GraphEdge[];
 }
 
-const graphDataUrl = "http://localhost:8080/review/hierarchyForNode";
+const graphDataUrl = `${baseUrl}/review/hierarchyForNode`;
 
 export default function Graph(props: { nodeName: string }) {
   const fetcher = (url: string) => fetch(url).then((res) => res.json());

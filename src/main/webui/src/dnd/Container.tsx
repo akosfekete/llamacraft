@@ -7,6 +7,8 @@ import { v4 as uuidv4 } from "uuid";
 import { DraggableBox, ItemDropData } from "./DraggableBox.js";
 import type { DragItem } from "./interfaces";
 import { ItemTypes } from "./ItemTypes.js";
+import { baseUrl } from "../const.js";
+import { removeEmojis } from "../shared/string_utils.js";
 
 export interface ContainerProps {
   boxes: BoxMap;
@@ -95,7 +97,7 @@ export const Container: FC<ContainerProps> = ({
         const secondTitle = boxes[secondItem.id]?.title ?? secondItem.title;
 
         fetch(
-          `http://localhost:8080/review/combine?first=${firstTitle}&second=${secondTitle}`,
+          `${baseUrl}/review/combine?first=${removeEmojis(firstTitle)}&second=${removeEmojis(secondTitle)}`,
         )
           .then((res) => res.text())
           .then((res) => {

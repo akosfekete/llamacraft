@@ -8,8 +8,9 @@ import useSWR, { mutate } from "swr";
 import { Dialog, DialogClose, DialogContent } from "./Dialog.js";
 import Graph from "../Graph.js";
 import "./filter.css";
+import { baseUrl } from "../const.js";
 
-const allCombinationsUrl = "http://localhost:8080/review/allCombinations";
+const allCombinationsUrl = `${baseUrl}/review/allCombinations`;
 
 export const Example: FC = () => {
   const fetcher = (url: string) => fetch(url).then((res) => res.json());
