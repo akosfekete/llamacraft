@@ -14,6 +14,7 @@ import org.neo4j.graphdb.Transaction
 import org.neo4j.kernel.impl.core.NodeEntity
 import java.nio.file.Path
 import java.time.Instant
+import kotlin.io.path.createDirectory
 import kotlin.io.path.exists
 
 const val PROP_OTHER_NODE = "firstNodeProperty"
@@ -29,9 +30,12 @@ class Neo4jDb {
 
     @PostConstruct
     fun initDb() {
-        val of = Path.of(neo4jPath)
-        require(of.exists()) { "DB path incorrect: $neo4jPath" }
-        managementService = DatabaseManagementServiceBuilder(of).build()
+        val path = Path.of(neo4jPath)
+        if (!path.exists())  {
+            path.createDirectory()
+        }
+        require(path.exists()) { "DB path incorrect: $neo4jPath" }
+        managementService = DatabaseManagementServiceBuilder(path).build()
         graphDb = managementService.database(DEFAULT_DATABASE_NAME)
         initDbWithDefValues()
     }
